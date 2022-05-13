@@ -11,7 +11,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class InstrumentUtil {
-    public static final String TAG = "<COVERAGE_TEST>";
+    public static final String C_TAG = "<COVERAGE_TEST>";
+    public static final String I_TAG = "<CALLBACK_ID>";
 
     public static void setupSoot(String androidPlatform, String apk, String outputDirectory) {
         G.reset();
@@ -47,7 +48,7 @@ public class InstrumentUtil {
     public static List<Unit> generateLogStatements(JimpleBody b, String msg, Value value) {
         List<Unit> generated = new ArrayList<>();
         Value logMessage = StringConstant.v(msg);
-        Value logType = StringConstant.v(TAG);
+        Value logType = StringConstant.v(C_TAG);
         Value logMsg = logMessage;
         if (value != null) logMsg = InstrumentUtil.appendTwoStrings(b, logMessage, value, generated);
         SootMethod sm = Scene.v().getMethod("<android.util.Log: int i(java.lang.String,java.lang.String)>");
@@ -97,7 +98,6 @@ public class InstrumentUtil {
     }
 
     public static Local generateNewLocal(Body body, Type type) {
-        // LocalGenerator lg = new LocalGenerator(body);
         LocalGenerator lg = new DefaultLocalGenerator(body);
         return lg.generateLocal(type);
     }
