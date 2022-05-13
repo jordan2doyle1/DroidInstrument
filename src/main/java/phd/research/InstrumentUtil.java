@@ -5,7 +5,6 @@ import soot.javaToJimple.DefaultLocalGenerator;
 import soot.jimple.*;
 import soot.options.Options;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -41,64 +40,100 @@ public class InstrumentUtil {
         return androidPrefixPkgNames.stream().map(classSignature::startsWith).reduce(false, (res, curr) -> res || curr);
     }
 
-    public static List<Unit> generateLogStatements(JimpleBody b, String msg) {
-        return generateLogStatements(b, msg, null);
-    }
-
-    public static List<Unit> generateLogStatements(JimpleBody b, String msg, Value value) {
-        List<Unit> generated = new ArrayList<>();
-        Value logMessage = StringConstant.v(msg);
-        Value logType = StringConstant.v(C_TAG);
-        Value logMsg = logMessage;
-        if (value != null) logMsg = InstrumentUtil.appendTwoStrings(b, logMessage, value, generated);
-        SootMethod sm = Scene.v().getMethod("<android.util.Log: int i(java.lang.String,java.lang.String)>");
-        StaticInvokeExpr invokeExpr = Jimple.v().newStaticInvokeExpr(sm.makeRef(), logType, logMsg);
-        generated.add(Jimple.v().newInvokeStmt(invokeExpr));
-        return generated;
-    }
-
-    private static Local appendTwoStrings(Body b, Value s1, Value s2, List<Unit> generated) {
-        RefType stringType = Scene.v().getSootClass("java.lang.String").getType();
-        SootClass builderClass = Scene.v().getSootClass("java.lang.StringBuilder");
-        RefType builderType = builderClass.getType();
-        NewExpr newBuilderExpr = Jimple.v().newNewExpr(builderType);
-        Local builderLocal = generateNewLocal(b, builderType);
-        generated.add(Jimple.v().newAssignStmt(builderLocal, newBuilderExpr));
-        Local tmpLocal = generateNewLocal(b, builderType);
-        Local resultLocal = generateNewLocal(b, stringType);
-
-        VirtualInvokeExpr appendExpr = Jimple.v().newVirtualInvokeExpr(builderLocal, builderClass.getMethod("java.lang.StringBuilder append(java.lang.String)").makeRef(), toString(b, s2, generated));
-        VirtualInvokeExpr toStrExpr = Jimple.v().newVirtualInvokeExpr(builderLocal, builderClass.getMethod("java.lang.String toString()").makeRef());
-
-        generated.add(Jimple.v().newInvokeStmt(Jimple.v().newSpecialInvokeExpr(builderLocal, builderClass.getMethod("void <init>(java.lang.String)").makeRef(), s1)));
-        generated.add(Jimple.v().newAssignStmt(tmpLocal, appendExpr));
-        generated.add(Jimple.v().newAssignStmt(resultLocal, toStrExpr));
-
-        return resultLocal;
-    }
-
-    public static Value toString(Body b, Value value, List<Unit> generated) {
-        SootClass stringClass = Scene.v().getSootClass("java.lang.String");
-        if (value.getType().equals(stringClass.getType())) return value;
-        Type type = value.getType();
-
-        if (type instanceof PrimType) {
-            Local tmpLocal = generateNewLocal(b, stringClass.getType());
-            generated.add(Jimple.v().newAssignStmt(tmpLocal, Jimple.v().newStaticInvokeExpr(stringClass.getMethod("java.lang.String valueOf(" + type + ")").makeRef(), value)));
-            return tmpLocal;
-        } else if (value instanceof Local) {
-            Local base = (Local) value;
-            SootMethod toStrMethod = Scene.v().getSootClass("java.lang.Object").getMethod("java.lang.String toString()");
-            Local tmpLocal = generateNewLocal(b, stringClass.getType());
-            generated.add(Jimple.v().newAssignStmt(tmpLocal, Jimple.v().newVirtualInvokeExpr(base, toStrMethod.makeRef())));
-            return tmpLocal;
-        } else {
-            throw new RuntimeException(String.format("The value %s should be primitive or local but it's %s", value, value.getType()));
-        }
-    }
-
     public static Local generateNewLocal(Body body, Type type) {
         LocalGenerator lg = new DefaultLocalGenerator(body);
         return lg.generateLocal(type);
+    }
+
+    public static void generatePrintStatements(JimpleBody body, Value message, List<Unit> generatedUnits) {
+        Local printLocal = generateNewLocal(body, RefType.v("java.io.PrintStream"));
+        SootField sysOutField = Scene.v().getField("<java.lang.System: java.io.PrintStream out>");
+        Value sysOutStaticFieldRef = Jimple.v().newStaticFieldRef(sysOutField.makeRef());
+        AssignStmt sysOutAssignStmt = Jimple.v().newAssignStmt(printLocal, sysOutStaticFieldRef);
+        generatedUnits.add(sysOutAssignStmt);
+
+        SootMethod printlnMethod = Scene.v().grabMethod(
+                "<java.io.PrintStream: void println(java.lang.String)>");
+        VirtualInvokeExpr printlnMethodExpr = Jimple.v().newVirtualInvokeExpr(
+                printLocal, printlnMethod.makeRef(), message);
+        InvokeStmt printlnMethodCallStmt = Jimple.v().newInvokeStmt(printlnMethodExpr);
+        generatedUnits.add(printlnMethodCallStmt);
+    }
+
+    public static Local generateGetIdStatements(JimpleBody body, List<Unit> generatedUnits) {
+        Local paramLocal = body.getParameterLocal(0);
+        SootMethod getIdMethod = Scene.v().grabMethod("<android.view.View: int getId()>");
+        VirtualInvokeExpr idMethodCallExpr = Jimple.v().newVirtualInvokeExpr(paramLocal, getIdMethod.makeRef());
+        Local idLocal = InstrumentUtil.generateNewLocal(body, IntType.v());
+        AssignStmt idAssignStmt = Jimple.v().newAssignStmt(idLocal, idMethodCallExpr);
+        generatedUnits.add(idAssignStmt);
+
+        return idLocal;
+    }
+
+    public static Local appendTwoValues(Body body, Value value1, Value value2, List<Unit> generatedUnits) {
+        RefType stringType = Scene.v().getSootClass("java.lang.String").getType();
+        Local appendedString = generateNewLocal(body, stringType);
+
+        SootClass stringBuilderClass = Scene.v().getSootClass("java.lang.StringBuilder");
+        RefType stringBuilderType = stringBuilderClass.getType();
+        NewExpr newStringBuilderExpr = Jimple.v().newNewExpr(stringBuilderType);
+        Local stringBuilderLocal = generateNewLocal(body, stringBuilderType);
+        generatedUnits.add(Jimple.v().newAssignStmt(stringBuilderLocal, newStringBuilderExpr));
+
+        SpecialInvokeExpr initStringBuilderExpr = Jimple.v().newSpecialInvokeExpr(
+                stringBuilderLocal,
+                stringBuilderClass.getMethod("void <init>(java.lang.String)").makeRef(),
+                value1
+        );
+        InvokeStmt initStringBuilderStmt = Jimple.v().newInvokeStmt(initStringBuilderExpr);
+        generatedUnits.add(initStringBuilderStmt);
+
+        VirtualInvokeExpr stringBuilderAppendExpr = Jimple.v().newVirtualInvokeExpr(
+                stringBuilderLocal,
+                stringBuilderClass.getMethod("java.lang.StringBuilder append(java.lang.String)").makeRef(),
+                toString(body, value2, generatedUnits)
+        );
+        Local tmpLocal = generateNewLocal(body, stringBuilderType);
+        AssignStmt stringBuilderAppendStmt = Jimple.v().newAssignStmt(tmpLocal, stringBuilderAppendExpr);
+        generatedUnits.add(stringBuilderAppendStmt);
+
+        VirtualInvokeExpr stringBuilderToStringExpr = Jimple.v().newVirtualInvokeExpr(
+                stringBuilderLocal, stringBuilderClass.getMethod("java.lang.String toString()").makeRef()
+        );
+        AssignStmt stringBuilderToStringStmt = Jimple.v().newAssignStmt(appendedString, stringBuilderToStringExpr);
+        generatedUnits.add(stringBuilderToStringStmt);
+
+        return appendedString;
+    }
+
+    private static Value toString(Body b, Value value, List<Unit> generatedUnits) {
+        SootClass stringClass = Scene.v().getSootClass("java.lang.String");
+        if (value.getType().equals(stringClass.getType())) return value;
+
+        Type type = value.getType();
+        if (type instanceof PrimType) {
+            Local tmpLocal = generateNewLocal(b, stringClass.getType());
+            StaticInvokeExpr staticInvokeExpr = Jimple.v().newStaticInvokeExpr(
+                    stringClass.getMethod("java.lang.String valueOf(" + type + ")").makeRef(),
+                    value
+            );
+            AssignStmt assignStmt = Jimple.v().newAssignStmt(tmpLocal, staticInvokeExpr);
+            generatedUnits.add(assignStmt);
+            return tmpLocal;
+        } else if (value instanceof Local) {
+            Local base = (Local) value;
+            SootMethod toStrMethod = Scene.v().getSootClass("java.lang.Object")
+                    .getMethod("java.lang.String toString()");
+            Local tmpLocal = generateNewLocal(b, stringClass.getType());
+            VirtualInvokeExpr invokeExpr = Jimple.v().newVirtualInvokeExpr(base, toStrMethod.makeRef());
+            AssignStmt assignStmt = Jimple.v().newAssignStmt(tmpLocal, invokeExpr);
+            generatedUnits.add(assignStmt);
+            return tmpLocal;
+        } else {
+            throw new RuntimeException(
+                    String.format("The value %s should be primitive or local but it's %s", value, value.getType())
+            );
+        }
     }
 }

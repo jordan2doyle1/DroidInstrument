@@ -5,7 +5,8 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soot.*;
-import soot.jimple.*;
+import soot.jimple.JimpleBody;
+import soot.jimple.StringConstant;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,9 +34,12 @@ public class FrameworkMain {
         System.out.println("Start time: " + dateFormatter.format(startDate));
 
         Options options = new Options();
-        options.addOption(Option.builder("ap").longOpt("android-platform").desc("Android SDK platform directory.").required().hasArg().numberOfArgs(1).argName("DIRECTORY").build());
-        options.addOption(Option.builder("a").longOpt("apk").desc("APK file to analyse.").required().hasArg().numberOfArgs(1).argName("FILE").build());
-        options.addOption(Option.builder("od").longOpt("output-directory").desc("Directory for output files.").hasArg().numberOfArgs(1).argName("DIRECTORY").build());
+        options.addOption(Option.builder("ap").longOpt("android-platform").required().hasArg().numberOfArgs(1)
+                .argName("DIRECTORY").desc("Android SDK platform directory.").build());
+        options.addOption(Option.builder("a").longOpt("apk").required().hasArg().numberOfArgs(1).argName("FILE")
+                .desc("APK file to analyse.").build());
+        options.addOption(Option.builder("od").longOpt("output-directory").hasArg().numberOfArgs(1)
+                .argName("DIRECTORY").desc("Directory for output files.").build());
         options.addOption(Option.builder("h").longOpt("help").desc("Display help.").build());
 
         CommandLine cmd = null;
@@ -71,7 +75,8 @@ public class FrameworkMain {
                 System.exit(30);
             }
 
-            outputDirectory = (cmd.hasOption("od") ? cmd.getOptionValue("od") : System.getProperty("user.dir") + "/output/");
+            outputDirectory = (cmd.hasOption("od") ?
+                    cmd.getOptionValue("od") : System.getProperty("user.dir") + "/output/");
             if (!directoryExists(outputDirectory)) {
                 outputDirectory = System.getProperty("user.dir") + "/output/";
                 if (createDirectory(outputDirectory)) {
@@ -98,90 +103,33 @@ public class FrameworkMain {
             @Override
             protected void internalTransform(Body b, String phaseName, Map<String, String> options) {
                 if (InstrumentUtil.isAndroidMethod(b.getMethod())) return;
+
                 JimpleBody body = (JimpleBody) b;
                 UnitPatchingChain units = b.getUnits();
                 List<Unit> generatedUnits = new ArrayList<>();
 
-                String content;
-                if (body.getMethod().getParameterCount() >= 1 && body.getMethod().getParameterType(0).equals(RefType.v("android.view.View"))) {
-                    content = String.format("%s%s Method: %s View: ", InstrumentUtil.C_TAG, InstrumentUtil.I_TAG, body.getMethod().getSignature());
-
-                    Local paramLocal = body.getParameterLocal(0);  //= InstrumentUtil.generateNewLocal(body, RefType.v("android.view.View"));
-                    //for (Local param : body.getParameterLocals()) {
-//                        if (param.getType().toString().contains("android/view/View")) {
-//                            System.out.println("here");
-//                            paramLocal = param;
-//                        }
-                    //}
-//                    SootField paramField = Scene.v().getField("@parameter0: android.view.View");
-//                    AssignStmt paramAssignStmt = Jimple.v().newAssignStmt(paramLocal, Jimple.v().newStaticFieldRef(paramField.makeRef()));
-//                    generatedUnits.add(paramAssignStmt);
-
-                    Local idLocal = InstrumentUtil.generateNewLocal(body, IntType.v());
-                    SootMethod getIdMethod = Scene.v().grabMethod("<android.view.View: int getId()>");
-                    VirtualInvokeExpr idMethodCallExpr = Jimple.v().newVirtualInvokeExpr(paramLocal, getIdMethod.makeRef());
-                    AssignStmt idAssignStmt = Jimple.v().newAssignStmt(idLocal, idMethodCallExpr);
-                    generatedUnits.add(idAssignStmt);
-
-                    Local printLocal = InstrumentUtil.generateNewLocal(body, RefType.v("java.io.PrintStream"));
-                    SootField sysOutField = Scene.v().getField("<java.lang.System: java.io.PrintStream out>");
-                    AssignStmt sysOutAssignStmt = Jimple.v().newAssignStmt(printLocal, Jimple.v().newStaticFieldRef(sysOutField.makeRef()));
-                    generatedUnits.add(sysOutAssignStmt);
-
-                    // String builder and append method calls.
-
-                    RefType stringType = Scene.v().getSootClass("java.lang.String").getType();
-                    SootClass builderClass = Scene.v().getSootClass("java.lang.StringBuilder");
-                    RefType builderType = builderClass.getType();
-                    NewExpr newBuilderExpr = Jimple.v().newNewExpr(builderType);
-                    Local builderLocal = InstrumentUtil.generateNewLocal(b, builderType);
-                    generatedUnits.add(Jimple.v().newAssignStmt(builderLocal, newBuilderExpr));
-                    Local tmpLocal = InstrumentUtil.generateNewLocal(b, builderType);
-                    Local resultLocal = InstrumentUtil.generateNewLocal(b, stringType);
-
-                    //Value idValue = StringConstant.v("123456789");
-                    VirtualInvokeExpr appendExpr = Jimple.v().newVirtualInvokeExpr(builderLocal, builderClass.getMethod("java.lang.StringBuilder append(java.lang.String)").makeRef(), InstrumentUtil.toString(b, idLocal, generatedUnits));
-                    VirtualInvokeExpr toStrExpr = Jimple.v().newVirtualInvokeExpr(builderLocal, builderClass.getMethod("java.lang.String toString()").makeRef());
-
-                    Value stringValue = StringConstant.v(content);
-                    generatedUnits.add(Jimple.v().newInvokeStmt(Jimple.v().newSpecialInvokeExpr(builderLocal, builderClass.getMethod("void <init>(java.lang.String)").makeRef(), stringValue)));
-                    generatedUnits.add(Jimple.v().newAssignStmt(tmpLocal, appendExpr));
-                    generatedUnits.add(Jimple.v().newAssignStmt(resultLocal, toStrExpr));
-
-                    // End
-
-                    SootMethod printlnMethod = Scene.v().grabMethod("<java.io.PrintStream: void println(java.lang.String)>");
-                    InvokeStmt printlnMethodCallStmt = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(printLocal, printlnMethod.makeRef(), resultLocal));
-                    generatedUnits.add(printlnMethodCallStmt);
-
-                    units.insertBefore(generatedUnits, body.getFirstNonIdentityStmt());
-                    b.validate();
+                Value printMessage;
+                if (body.getMethod().getParameterCount() >= 1
+                        && body.getMethod().getParameterType(0).equals(RefType.v("android.view.View"))) {
+                    Local idLocal = InstrumentUtil.generateGetIdStatements(body, generatedUnits);
+                    Value stringValue = StringConstant.v(
+                            String.format("%s%s Method: %s View: ",
+                                    InstrumentUtil.C_TAG, InstrumentUtil.I_TAG, body.getMethod().getSignature())
+                    );
+                    printMessage = InstrumentUtil.appendTwoValues(body, stringValue, idLocal, generatedUnits);
                 } else {
-                    content = String.format("%s Executing Method: %s", InstrumentUtil.C_TAG, body.getMethod().getSignature());
-                    // In order to call "System.out.println" we need to create a local containing "System.out" value
-                    Local psLocal = InstrumentUtil.generateNewLocal(body, RefType.v("java.io.PrintStream"));
-
-                    // Now we assign "System.out" to psLocal
-                    SootField sysOutField = Scene.v().getField("<java.lang.System: java.io.PrintStream out>");
-                    AssignStmt sysOutAssignStmt = Jimple.v().newAssignStmt(psLocal, Jimple.v().newStaticFieldRef(sysOutField.makeRef()));
-                    generatedUnits.add(sysOutAssignStmt);
-
-                    // Create println method call and provide its parameter
-                    SootMethod printlnMethod = Scene.v().grabMethod("<java.io.PrintStream: void println(java.lang.String)>");
-                    Value printlnParameter = StringConstant.v(content);
-                    InvokeStmt printlnMethodCallStmt = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(psLocal, printlnMethod.makeRef(), printlnParameter));
-                    generatedUnits.add(printlnMethodCallStmt);
-                    // Insert the generated statement before the first  non-identity stmt
-                    units.insertBefore(generatedUnits, body.getFirstNonIdentityStmt());
-                    // Validate the body to ensure that our code injection does not introduce any problem (at least statically)
-                    b.validate();
+                    printMessage = StringConstant.v(
+                            String.format("%s Method: %s", InstrumentUtil.C_TAG, body.getMethod().getSignature())
+                    );
                 }
+
+                InstrumentUtil.generatePrintStatements(body, printMessage, generatedUnits);
+                units.insertBefore(generatedUnits, body.getFirstNonIdentityStmt());
+                b.validate();
             }
         }));
 
-        // Run Soot packs (note that our transformer pack is added to the phase "jtp")
         PackManager.v().runPacks();
-        // Write the result of packs in outputPath
         PackManager.v().writeOutput();
 
         LocalDateTime endDate = LocalDateTime.now();
