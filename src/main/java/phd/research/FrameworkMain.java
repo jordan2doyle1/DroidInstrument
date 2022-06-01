@@ -34,7 +34,7 @@ public class FrameworkMain {
         System.out.println("Start time: " + dateFormatter.format(startDate));
 
         Options options = new Options();
-        options.addOption(Option.builder("ap").longOpt("android-platform").required().hasArg().numberOfArgs(1)
+        options.addOption(Option.builder("ap").longOpt("android-platform").hasArg().numberOfArgs(1)
                 .argName("DIRECTORY").desc("Android SDK platform directory.").build());
         options.addOption(Option.builder("a").longOpt("apk").required().hasArg().numberOfArgs(1).argName("FILE")
                 .desc("APK file to analyse.").build());
@@ -61,7 +61,8 @@ public class FrameworkMain {
         }
 
         if (cmd != null) {
-            androidPlatform = cmd.getOptionValue("ap");
+            androidPlatform = (cmd.hasOption("ap") ?
+                    cmd.getOptionValue("ap") : System.getenv("ANDROID_HOME") + "/platforms/");
             if (!directoryExists(androidPlatform)) {
                 logger.error("Error: Android platform directory does not exist (" + androidPlatform + ").");
                 System.err.println("Error: Android platform directory does not exist (" + androidPlatform + ").");
