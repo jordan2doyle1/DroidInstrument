@@ -34,12 +34,12 @@ public class FrameworkMain {
         System.out.println("Start time: " + dateFormatter.format(startDate));
 
         Options options = new Options();
-        options.addOption(Option.builder("ap").longOpt("android-platform").hasArg().numberOfArgs(1)
-                .argName("DIRECTORY").desc("Android SDK platform directory.").build());
+        options.addOption(Option.builder("ap").longOpt("android-platform").hasArg().numberOfArgs(1).argName(
+                "DIRECTORY").desc("Android SDK platform directory.").build());
         options.addOption(Option.builder("a").longOpt("apk").required().hasArg().numberOfArgs(1).argName("FILE")
                 .desc("APK file to analyse.").build());
-        options.addOption(Option.builder("od").longOpt("output-directory").hasArg().numberOfArgs(1)
-                .argName("DIRECTORY").desc("Directory for output files.").build());
+        options.addOption(Option.builder("od").longOpt("output-directory").hasArg().numberOfArgs(1).argName(
+                "DIRECTORY").desc("Directory for output files.").build());
         options.addOption(Option.builder("h").longOpt("help").desc("Display help.").build());
 
         CommandLine cmd = null;
@@ -61,8 +61,8 @@ public class FrameworkMain {
         }
 
         if (cmd != null) {
-            androidPlatform = (cmd.hasOption("ap") ?
-                    cmd.getOptionValue("ap") : System.getenv("ANDROID_HOME") + "/platforms/");
+            androidPlatform = (cmd.hasOption("ap") ? cmd.getOptionValue("ap") : System.getenv("ANDROID_HOME") +
+                    "/platforms/");
             if (!directoryExists(androidPlatform)) {
                 logger.error("Error: Android platform directory does not exist (" + androidPlatform + ").");
                 System.err.println("Error: Android platform directory does not exist (" + androidPlatform + ").");
@@ -76,8 +76,8 @@ public class FrameworkMain {
                 System.exit(30);
             }
 
-            outputDirectory = (cmd.hasOption("od") ?
-                    cmd.getOptionValue("od") : System.getProperty("user.dir") + "/output/");
+            outputDirectory = (cmd.hasOption("od") ? cmd.getOptionValue("od") : System.getProperty("user.dir") +
+                    "/output/");
             if (!directoryExists(outputDirectory)) {
                 outputDirectory = System.getProperty("user.dir") + "/output/";
                 if (createDirectory(outputDirectory)) {
@@ -113,16 +113,12 @@ public class FrameworkMain {
                 if (body.getMethod().getParameterCount() >= 1
                         && body.getMethod().getParameterType(0).equals(RefType.v("android.view.View"))) {
                     Local idLocal = InstrumentUtil.generateGetIdStatements(body, generatedUnits);
-                    Value stringValue = StringConstant.v(
-                            String.format("%s%s Method: %s View: ",
-                                    InstrumentUtil.C_TAG, InstrumentUtil.I_TAG, body.getMethod().getSignature())
-                    );
+                    Value stringValue = StringConstant.v(String.format("%s%s Method: %s View: ", InstrumentUtil.C_TAG
+                            , InstrumentUtil.I_TAG, body.getMethod().getSignature()));
                     printMessage = InstrumentUtil.appendTwoValues(body, stringValue, idLocal, generatedUnits);
-                } else {
-                    printMessage = StringConstant.v(
-                            String.format("%s Method: %s", InstrumentUtil.C_TAG, body.getMethod().getSignature())
-                    );
-                }
+                } else
+                    printMessage = StringConstant.v(String.format("%s Method: %s", InstrumentUtil.C_TAG,
+                            body.getMethod().getSignature()));
 
                 InstrumentUtil.generatePrintStatements(body, printMessage, generatedUnits);
                 units.insertBefore(generatedUnits, body.getFirstNonIdentityStmt());
