@@ -31,7 +31,6 @@ public class FrameworkMain {
         LocalDateTime startDate = LocalDateTime.now();
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yy-HH:mm:ss");
         logger.info("Start time: " + dateFormatter.format(startDate));
-        System.out.println("Start time: " + dateFormatter.format(startDate));
 
         Options options = new Options();
         options.addOption(Option.builder("a").longOpt("apk").required().hasArg().numberOfArgs(1).argName("FILE")
@@ -65,14 +64,12 @@ public class FrameworkMain {
                     (cmd.hasOption("p") ? cmd.getOptionValue("p") : System.getenv("ANDROID_HOME") + "/platforms/");
             if (!directoryExists(androidPlatform)) {
                 logger.error("Error: Android platform directory does not exist (" + androidPlatform + ").");
-                System.err.println("Error: Android platform directory does not exist (" + androidPlatform + ").");
                 System.exit(10);
             }
 
             apk = cmd.getOptionValue("a");
             if (!fileExists(apk)) {
                 logger.error("Error: APK file does not exist (" + apk + ").");
-                System.err.println("Error: APK file does not exist (" + apk + ").");
                 System.exit(30);
             }
 
@@ -83,11 +80,9 @@ public class FrameworkMain {
                 if (createDirectory(outputDirectory)) {
                     if (cmd.hasOption("o")) {
                         logger.warn("Warning: Output directory doesn't exist, using default directory instead.");
-                        System.err.println("Warning: Output directory doesn't exist, using default directory instead.");
                     }
                 } else {
                     logger.error("Error: Output directory does not exist.");
-                    System.err.println("Error: Output directory does not exist.");
                 }
             }
         }
@@ -136,10 +131,8 @@ public class FrameworkMain {
 
         LocalDateTime endDate = LocalDateTime.now();
         logger.info("End time: " + dateFormatter.format(endDate));
-        System.out.println("End time: " + dateFormatter.format(endDate));
         Duration duration = Duration.between(startDate, endDate);
         logger.info("Execution time: " + duration.getSeconds() + " second(s).");
-        System.out.println("Execution time: " + duration.getSeconds() + " second(s).");
     }
 
     private static boolean checkForHelp(String[] args) {
@@ -152,7 +145,6 @@ public class FrameworkMain {
             cmd = parser.parse(options, args, true);
         } catch (ParseException e) {
             logger.error("Error Parsing Command Line Arguments: " + e.getMessage());
-            System.err.println("Error Parsing Command Line Arguments: " + e.getMessage());
         }
 
         if (cmd != null) {
