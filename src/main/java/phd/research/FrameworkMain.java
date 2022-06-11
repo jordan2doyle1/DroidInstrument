@@ -25,6 +25,7 @@ public class FrameworkMain {
     private static final Logger logger = LoggerFactory.getLogger(FrameworkMain.class);
     private static String androidPlatform;
     private static String apk;
+    private static String input_directory;
     private static String outputDirectory;
 
     public static void main(String[] args) {
@@ -32,9 +33,15 @@ public class FrameworkMain {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yy-HH:mm:ss");
         logger.info("Start time: " + dateFormatter.format(startDate));
 
-        Options options = new Options();
-        options.addOption(Option.builder("a").longOpt("apk").required().hasArg().numberOfArgs(1).argName("FILE")
+        OptionGroup optionGroup = new OptionGroup();
+        optionGroup.addOption(Option.builder("a").longOpt("apk").hasArg().numberOfArgs(1).argName("FILE")
                 .desc("APK file to analyse.").build());
+        optionGroup.addOption(Option.builder("i").longOpt("input-apk-directory").hasArg().numberOfArgs(1)
+                .argName("DIRECTORY").desc("Directory with APK files to analyse.").build());
+        optionGroup.setRequired(true);
+
+        Options options = new Options();
+        options.addOptionGroup(optionGroup);
         options.addOption(Option.builder("p").longOpt("android-platform").hasArg().numberOfArgs(1).argName("DIRECTORY")
                 .desc("Android SDK platform directory.").build());
         options.addOption(Option.builder("o").longOpt("output-directory").hasArg().numberOfArgs(1).argName("DIRECTORY")
@@ -67,10 +74,20 @@ public class FrameworkMain {
                 System.exit(10);
             }
 
-            apk = cmd.getOptionValue("a");
-            if (!fileExists(apk)) {
-                logger.error("Error: APK file does not exist (" + apk + ").");
-                System.exit(30);
+            apk = (cmd.hasOption("a") ? cmd.getOptionValue("a") : null);
+            if (apk != null) {
+                if (!fileExists(apk)) {
+                    logger.error("Error: APK file does not exist (" + apk + ").");
+                    System.exit(20);
+                }
+            }
+
+            input_directory = (cmd.hasOption("i") ? cmd.getOptionValue("i") : null);
+            if (input_directory != null) {
+                if (!directoryExists(input_directory)) {
+                    logger.error("Error: APK input directory does not exist (" + input_directory + ").");
+                    System.exit(30);
+                }
             }
 
             outputDirectory =
@@ -92,8 +109,6 @@ public class FrameworkMain {
         } catch (IOException e) {
             logger.error("Error cleaning output directory: " + e.getMessage());
         }
-
-        InstrumentUtil.setupSoot(androidPlatform, apk, outputDirectory);
 
         PackManager.v().getPack("jtp").add(new Transform("jtp.instrument", new BodyTransformer() {
             @Override
@@ -126,8 +141,26 @@ public class FrameworkMain {
             }
         }));
 
-        PackManager.v().runPacks();
-        PackManager.v().writeOutput();
+        if (apk != null) {
+            InstrumentUtil.setupSoot(androidPlatform, apk, outputDirectory);
+            PackManager.v().runPacks();
+            PackManager.v().writeOutput();
+        }
+
+        if (input_directory != null) {
+            File directory = new File(input_directory);
+            File[] apkFiles = directory.listFiles((dir, name) -> name.toLowerCase().endsWith(".apk"));
+            if (apkFiles != null) {
+                for (File apk : apkFiles) {
+                    logger.info("Processing: " + apk.getName());
+                    InstrumentUtil.setupSoot(androidPlatform, apk.getPath(), outputDirectory);
+                    PackManager.v().runPacks();
+                    PackManager.v().writeOutput();
+                }
+            } else {
+                logger.error("Problem retrieving list of files in input directory.");
+            }
+        }
 
         LocalDateTime endDate = LocalDateTime.now();
         logger.info("End time: " + dateFormatter.format(endDate));
