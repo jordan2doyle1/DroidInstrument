@@ -34,10 +34,12 @@ public class FrameworkMain {
         logger.info("Start time: " + dateFormatter.format(startDate));
 
         OptionGroup optionGroup = new OptionGroup();
-        optionGroup.addOption(Option.builder("a").longOpt("apk").hasArg().numberOfArgs(1).argName("FILE")
-                .desc("APK file to analyse.").build());
-        optionGroup.addOption(Option.builder("i").longOpt("input-apk-directory").hasArg().numberOfArgs(1)
-                .argName("DIRECTORY").desc("Directory with APK files to analyse.").build());
+        optionGroup.addOption(
+                Option.builder("a").longOpt("apk").hasArg().numberOfArgs(1).argName("FILE").desc("APK file to analyse.")
+                        .build());
+        optionGroup.addOption(
+                Option.builder("i").longOpt("input-apk-directory").hasArg().numberOfArgs(1).argName("DIRECTORY")
+                        .desc("Directory with APK files to analyse.").build());
         optionGroup.setRequired(true);
 
         Options options = new Options();
@@ -69,14 +71,14 @@ public class FrameworkMain {
         if (cmd != null) {
             androidPlatform =
                     (cmd.hasOption("p") ? cmd.getOptionValue("p") : System.getenv("ANDROID_HOME") + "/platforms/");
-            if (!directoryExists(androidPlatform)) {
+            if (!(new File(androidPlatform).isDirectory())) {
                 logger.error("Error: Android platform directory does not exist (" + androidPlatform + ").");
                 System.exit(10);
             }
 
             apk = (cmd.hasOption("a") ? cmd.getOptionValue("a") : null);
             if (apk != null) {
-                if (!fileExists(apk)) {
+                if (!(new File(apk).exists())) {
                     logger.error("Error: APK file does not exist (" + apk + ").");
                     System.exit(20);
                 }
@@ -84,7 +86,7 @@ public class FrameworkMain {
 
             input_directory = (cmd.hasOption("i") ? cmd.getOptionValue("i") : null);
             if (input_directory != null) {
-                if (!directoryExists(input_directory)) {
+                if (!(new File(input_directory).isDirectory())) {
                     logger.error("Error: APK input directory does not exist (" + input_directory + ").");
                     System.exit(30);
                 }
@@ -92,14 +94,15 @@ public class FrameworkMain {
 
             outputDirectory =
                     (cmd.hasOption("o") ? cmd.getOptionValue("o") : System.getProperty("user.dir") + "/output/");
-            if (!directoryExists(outputDirectory)) {
+            if (!(new File(outputDirectory).isDirectory())) {
                 outputDirectory = System.getProperty("user.dir") + "/output/";
-                if (createDirectory(outputDirectory)) {
+                if (new File(outputDirectory).mkdir()) {
                     if (cmd.hasOption("o")) {
                         logger.warn("Warning: Output directory doesn't exist, using default directory instead.");
                     }
                 } else {
                     logger.error("Error: Output directory does not exist.");
+                    System.exit(40);
                 }
             }
         }
@@ -185,21 +188,5 @@ public class FrameworkMain {
         }
 
         return false;
-    }
-
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    private static boolean directoryExists(String directoryName) {
-        File directory = new File(directoryName);
-        return directory.isDirectory();
-    }
-
-    private static boolean createDirectory(String directoryName) {
-        File directory = new File(directoryName);
-        return directory.mkdir();
-    }
-
-    private static boolean fileExists(String fileName) {
-        File file = new File(fileName);
-        return file.exists();
     }
 }
