@@ -10,6 +10,6 @@ Before you can install the output APK on an Android device you need to sign the 
 "app.apk" with the name of your APK file.
 
 ```
-./Sign.sh output/app.apk Key "android"
+./sign.sh output/app.apk key "android"
 adb install -r -t output/app.apk
 ```

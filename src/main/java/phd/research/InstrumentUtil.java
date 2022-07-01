@@ -27,7 +27,6 @@ public class InstrumentUtil {
         // Write (APK Generation) Options
         Options.v().set_output_format(Options.output_format_dex);
         Options.v().set_output_dir(outputDirectory);
-        Options.v().set_validate(true);
         // Resolve required classes
         Scene.v().addBasicClass("java.io.PrintStream", SootClass.SIGNATURES);
         Scene.v().addBasicClass("java.lang.System", SootClass.SIGNATURES);
