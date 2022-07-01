@@ -171,17 +171,12 @@ public class FrameworkMain {
         logger.info("Execution time: " + duration.getSeconds() + " second(s).");
     }
 
-    private static boolean checkForHelp(String[] args) {
+    private static boolean checkForHelp(String[] args) throws ParseException {
         Options options = new Options();
         options.addOption(Option.builder("h").longOpt("help").desc("Display help.").build());
 
         CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = null;
-        try {
-            cmd = parser.parse(options, args, true);
-        } catch (ParseException e) {
-            logger.error("Error Parsing Command Line Arguments: " + e.getMessage());
-        }
+        CommandLine cmd = parser.parse(options, args, true);
 
         if (cmd != null) {
             return cmd.hasOption("h");
