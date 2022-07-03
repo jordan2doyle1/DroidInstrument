@@ -35,8 +35,10 @@ public class InstrumentUtil {
 
     public static boolean isAndroidMethod(SootMethod sootMethod) {
         String classSignature = sootMethod.getDeclaringClass().getName();
-        List<String> androidPrefixPkgNames = Arrays.asList("java.", "javax.", "sun.", "org.apache.", "org.eclipse.",
-                "soot.", "android.", "com.google.android", "androidx.");
+        List<String> androidPrefixPkgNames =
+                Arrays.asList("java.", "javax.", "sun.", "org.apache.", "org.eclipse.", "soot.", "android.",
+                        "com.google.android", "androidx."
+                             );
         return androidPrefixPkgNames.stream().map(classSignature::startsWith).reduce(false, (res, curr) -> res || curr);
     }
 

@@ -11,9 +11,6 @@ import soot.jimple.StringConstant;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,9 +26,8 @@ public class FrameworkMain {
     private static String outputDirectory;
 
     public static void main(String[] args) {
-        LocalDateTime startDate = LocalDateTime.now();
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yy-HH:mm:ss");
-        logger.info("Start time: " + dateFormatter.format(startDate));
+        DateTimer timer = new DateTimer();
+        logger.info("Start time: " + timer.start());
 
         OptionGroup optionGroup = new OptionGroup();
         optionGroup.addOption(
@@ -52,7 +48,7 @@ public class FrameworkMain {
 
         CommandLine cmd = null;
         try {
-            if (checkForHelp(args)) {
+            if (OptionUtils.checkForHelp(args)) {
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.printHelp("DroidInstrument", options);
                 System.exit(0);
@@ -165,23 +161,7 @@ public class FrameworkMain {
             }
         }
 
-        LocalDateTime endDate = LocalDateTime.now();
-        logger.info("End time: " + dateFormatter.format(endDate));
-        Duration duration = Duration.between(startDate, endDate);
-        logger.info("Execution time: " + duration.getSeconds() + " second(s).");
-    }
-
-    private static boolean checkForHelp(String[] args) throws ParseException {
-        Options options = new Options();
-        options.addOption(Option.builder("h").longOpt("help").desc("Display help.").build());
-
-        CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = parser.parse(options, args, true);
-
-        if (cmd != null) {
-            return cmd.hasOption("h");
-        }
-
-        return false;
+        logger.info("End time: " + timer.end());
+        logger.info("Execution time: " + timer.secondsDuration() + " second(s).");
     }
 }
