@@ -20,15 +20,8 @@ import java.util.Map;
  */
 public class FrameworkMain {
     private static final Logger logger = LoggerFactory.getLogger(FrameworkMain.class);
-    private static String androidPlatform;
-    private static String apk;
-    private static String input_directory;
-    private static String outputDirectory;
 
     public static void main(String[] args) {
-        DateTimer timer = new DateTimer();
-        logger.info("Start time: " + timer.start());
-
         OptionGroup optionGroup = new OptionGroup();
         optionGroup.addOption(
                 Option.builder("a").longOpt("apk").hasArg().numberOfArgs(1).argName("FILE").desc("APK file to analyse.")
@@ -48,12 +41,6 @@ public class FrameworkMain {
 
         CommandLine cmd = null;
         try {
-            if (OptionUtils.checkForHelp(args)) {
-                HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp("DroidInstrument", options);
-                System.exit(0);
-            }
-
             CommandLineParser parser = new DefaultParser();
             cmd = parser.parse(options, args);
         } catch (ParseException e) {
@@ -64,42 +51,49 @@ public class FrameworkMain {
             System.exit(0);
         }
 
-        if (cmd != null) {
-            androidPlatform =
-                    (cmd.hasOption("p") ? cmd.getOptionValue("p") : System.getenv("ANDROID_HOME") + "/platforms/");
-            if (!(new File(androidPlatform).isDirectory())) {
-                logger.error("Error: Android platform directory does not exist (" + androidPlatform + ").");
-                System.exit(10);
-            }
+        if (cmd.hasOption("h")) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("DroidInstrument", options);
+            System.exit(0);
+        }
 
-            apk = (cmd.hasOption("a") ? cmd.getOptionValue("a") : null);
-            if (apk != null) {
-                if (!(new File(apk).exists())) {
-                    logger.error("Error: APK file does not exist (" + apk + ").");
-                    System.exit(20);
-                }
-            }
+        Timer timer = new Timer();
+        logger.info("Start time: " + timer.start());
 
-            input_directory = (cmd.hasOption("i") ? cmd.getOptionValue("i") : null);
-            if (input_directory != null) {
-                if (!(new File(input_directory).isDirectory())) {
-                    logger.error("Error: APK input directory does not exist (" + input_directory + ").");
-                    System.exit(30);
-                }
-            }
+        String androidPlatform =
+                (cmd.hasOption("p") ? cmd.getOptionValue("p") : System.getenv("ANDROID_HOME") + "/platforms/");
+        if (!(new File(androidPlatform).isDirectory())) {
+            logger.error("Error: Android platform directory does not exist (" + androidPlatform + ").");
+            System.exit(10);
+        }
 
-            outputDirectory =
-                    (cmd.hasOption("o") ? cmd.getOptionValue("o") : System.getProperty("user.dir") + "/output/");
-            if (!(new File(outputDirectory).isDirectory())) {
-                outputDirectory = System.getProperty("user.dir") + "/output/";
-                if (new File(outputDirectory).mkdir()) {
-                    if (cmd.hasOption("o")) {
-                        logger.warn("Warning: Output directory doesn't exist, using default directory instead.");
-                    }
-                } else {
-                    logger.error("Error: Output directory does not exist.");
-                    System.exit(40);
+        String apk = (cmd.hasOption("a") ? cmd.getOptionValue("a") : null);
+        if (apk != null) {
+            if (!(new File(apk).exists())) {
+                logger.error("Error: APK file does not exist (" + apk + ").");
+                System.exit(20);
+            }
+        }
+
+        String input_directory = (cmd.hasOption("i") ? cmd.getOptionValue("i") : null);
+        if (input_directory != null) {
+            if (!(new File(input_directory).isDirectory())) {
+                logger.error("Error: APK input directory does not exist (" + input_directory + ").");
+                System.exit(30);
+            }
+        }
+
+        String outputDirectory =
+                (cmd.hasOption("o") ? cmd.getOptionValue("o") : System.getProperty("user.dir") + "/output/");
+        if (!(new File(outputDirectory).isDirectory())) {
+            outputDirectory = System.getProperty("user.dir") + "/output/";
+            if (new File(outputDirectory).mkdir()) {
+                if (cmd.hasOption("o")) {
+                    logger.warn("Warning: Output directory doesn't exist, using default directory instead.");
                 }
+            } else {
+                logger.error("Error: Output directory does not exist.");
+                System.exit(40);
             }
         }
 
@@ -150,9 +144,9 @@ public class FrameworkMain {
             File directory = new File(input_directory);
             File[] apkFiles = directory.listFiles((dir, name) -> name.toLowerCase().endsWith(".apk"));
             if (apkFiles != null) {
-                for (File apk : apkFiles) {
-                    logger.info("Processing: " + apk.getName());
-                    InstrumentUtil.setupSoot(androidPlatform, apk.getPath(), outputDirectory);
+                for (File currentApk : apkFiles) {
+                    logger.info("Processing: " + currentApk.getName());
+                    InstrumentUtil.setupSoot(androidPlatform, currentApk.getPath(), outputDirectory);
                     PackManager.v().runPacks();
                     PackManager.v().writeOutput();
                 }
