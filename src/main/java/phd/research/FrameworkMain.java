@@ -22,17 +22,9 @@ public class FrameworkMain {
     private static final Logger logger = LoggerFactory.getLogger(FrameworkMain.class);
 
     public static void main(String[] args) {
-        OptionGroup optionGroup = new OptionGroup();
-        optionGroup.addOption(
-                Option.builder("a").longOpt("apk").hasArg().numberOfArgs(1).argName("FILE").desc("APK file to analyse.")
-                        .build());
-        optionGroup.addOption(
-                Option.builder("i").longOpt("input-apk-directory").hasArg().numberOfArgs(1).argName("DIRECTORY")
-                        .desc("Directory with APK files to analyse.").build());
-        optionGroup.setRequired(true);
-
         Options options = new Options();
-        options.addOptionGroup(optionGroup);
+        options.addOption(Option.builder("a").longOpt("apk").required().hasArg().numberOfArgs(1).argName("FILE")
+                .desc("APK file to analyse.").build());
         options.addOption(Option.builder("p").longOpt("android-platform").hasArg().numberOfArgs(1).argName("DIRECTORY")
                 .desc("Android SDK platform directory.").build());
         options.addOption(Option.builder("o").longOpt("output-directory").hasArg().numberOfArgs(1).argName("DIRECTORY")
@@ -72,14 +64,6 @@ public class FrameworkMain {
             if (!(new File(apk).exists())) {
                 logger.error("Error: APK file does not exist (" + apk + ").");
                 System.exit(20);
-            }
-        }
-
-        String input_directory = (cmd.hasOption("i") ? cmd.getOptionValue("i") : null);
-        if (input_directory != null) {
-            if (!(new File(input_directory).isDirectory())) {
-                logger.error("Error: APK input directory does not exist (" + input_directory + ").");
-                System.exit(30);
             }
         }
 
@@ -135,34 +119,21 @@ public class FrameworkMain {
         }));
 
         if (apk != null) {
+            Timer instrumentTimer = new Timer();
+            logger.info("Processing: " + apk + " with start time: " + instrumentTimer.start(true));
+
             InstrumentUtil.setupSoot(androidPlatform, apk, outputDirectory);
             PackManager.v().runPacks();
+
             try {
                 PackManager.v().writeOutput();
-            } catch(RuntimeException e) {
+            } catch (RuntimeException e) {
                 logger.error("Problem writing instrumented code to APK (" + apk + "): ");
                 e.printStackTrace();
             }
-        }
 
-        if (input_directory != null) {
-            File directory = new File(input_directory);
-            File[] apkFiles = directory.listFiles((dir, name) -> name.toLowerCase().endsWith(".apk"));
-            if (apkFiles != null) {
-                for (File currentApk : apkFiles) {
-                    logger.info("Processing: " + currentApk.getName());
-                    InstrumentUtil.setupSoot(androidPlatform, currentApk.getPath(), outputDirectory);
-                    PackManager.v().runPacks();
-                    try {
-                        PackManager.v().writeOutput();
-                    } catch(RuntimeException e) {
-                        logger.error("Problem writing instrumented code to APK (" + apk + ")");
-                        e.printStackTrace();
-                    }
-                }
-            } else {
-                logger.error("Problem retrieving list of files in input directory.");
-            }
+            logger.info("End time: " + instrumentTimer.end());
+            logger.info("Execution time: " + instrumentTimer.secondsDuration() + " second(s).");
         }
 
         logger.info("End time: " + timer.end());
