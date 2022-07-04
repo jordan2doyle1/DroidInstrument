@@ -122,8 +122,7 @@ public class FrameworkMain {
         }));
 
         if (apk != null) {
-            Timer instrumentTimer = new Timer();
-            logger.info("Processing: " + apk + " with start time: " + instrumentTimer.start(true));
+            logger.info("Processing: " + apk);
 
             InstrumentUtil.setupSoot(androidPlatform, apk, outputDirectory);
             PackManager.v().runPacks();
@@ -134,9 +133,6 @@ public class FrameworkMain {
                 logger.error("Problem writing instrumented code to APK (" + apk + "): ");
                 e.printStackTrace();
             }
-
-            logger.info("End time: " + instrumentTimer.end());
-            logger.info("Execution time: " + instrumentTimer.secondsDuration() + " second(s).");
         }
 
         logger.info("End time: " + timer.end());
