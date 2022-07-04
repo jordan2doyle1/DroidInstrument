@@ -36,10 +36,11 @@ public class InstrumentUtil {
     public static boolean isAndroidMethod(SootMethod sootMethod) {
         String classSignature = sootMethod.getDeclaringClass().getName();
         List<String> androidPrefixPkgNames =
-                Arrays.asList("java.", "javax.", "sun.", "org.apache.", "org.eclipse.", "soot.", "android.",
-                        "com.google.android", "androidx."
+                Arrays.asList("java.", "javax.", "sun.", "com.sun.", "com.ibm.", "org.xml.", "org.w3c.", "apple.awt.",
+                        "com.apple.", "org.apache.", "org.eclipse.", "soot.", "android.", "com.google.android",
+                        "androidx."
                              );
-        return androidPrefixPkgNames.stream().map(classSignature::startsWith).reduce(false, (res, curr) -> res || curr);
+        return androidPrefixPkgNames.stream().anyMatch(classSignature::startsWith);
     }
 
     public static Local generateNewLocal(Body body, Type type) {

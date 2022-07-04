@@ -137,7 +137,12 @@ public class FrameworkMain {
         if (apk != null) {
             InstrumentUtil.setupSoot(androidPlatform, apk, outputDirectory);
             PackManager.v().runPacks();
-            PackManager.v().writeOutput();
+            try {
+                PackManager.v().writeOutput();
+            } catch(RuntimeException e) {
+                logger.error("Problem writing instrumented code to APK (" + apk + "): ");
+                e.printStackTrace();
+            }
         }
 
         if (input_directory != null) {
@@ -148,7 +153,12 @@ public class FrameworkMain {
                     logger.info("Processing: " + currentApk.getName());
                     InstrumentUtil.setupSoot(androidPlatform, currentApk.getPath(), outputDirectory);
                     PackManager.v().runPacks();
-                    PackManager.v().writeOutput();
+                    try {
+                        PackManager.v().writeOutput();
+                    } catch(RuntimeException e) {
+                        logger.error("Problem writing instrumented code to APK (" + apk + ")");
+                        e.printStackTrace();
+                    }
                 }
             } else {
                 logger.error("Problem retrieving list of files in input directory.");
