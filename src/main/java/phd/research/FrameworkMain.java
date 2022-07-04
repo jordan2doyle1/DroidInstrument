@@ -29,6 +29,7 @@ public class FrameworkMain {
                 .desc("Android SDK platform directory.").build());
         options.addOption(Option.builder("o").longOpt("output-directory").hasArg().numberOfArgs(1).argName("DIRECTORY")
                 .desc("Directory for output files.").build());
+        options.addOption(Option.builder("c").longOpt("clean-directory").desc("Clean output directory.").build());
         options.addOption(Option.builder("h").longOpt("help").desc("Display help.").build());
 
         CommandLine cmd = null;
@@ -81,10 +82,12 @@ public class FrameworkMain {
             }
         }
 
-        try {
-            FileUtils.cleanDirectory(new File(outputDirectory));
-        } catch (IOException e) {
-            logger.error("Error cleaning output directory: " + e.getMessage());
+        if (cmd.hasOption("c")) {
+            try {
+                FileUtils.cleanDirectory(new File(outputDirectory));
+            } catch (IOException e) {
+                logger.error("Error cleaning output directory: " + e.getMessage());
+            }
         }
 
         PackManager.v().getPack("jtp").add(new Transform("jtp.instrument", new BodyTransformer() {
