@@ -60,12 +60,10 @@ public class FrameworkMain {
             System.exit(10);
         }
 
-        String apk = (cmd.hasOption("a") ? cmd.getOptionValue("a") : null);
-        if (apk != null) {
-            if (!(new File(apk).exists())) {
-                logger.error("Error: APK file does not exist (" + apk + ").");
-                System.exit(20);
-            }
+        String apk = (cmd.hasOption("a") ? cmd.getOptionValue("a") : "");
+        if (!(new File(apk).exists())) {
+            logger.error("Error: APK file does not exist (" + apk + ").");
+            System.exit(20);
         }
 
         String outputDirectory =
@@ -89,6 +87,9 @@ public class FrameworkMain {
                 logger.error("Error cleaning output directory: " + e.getMessage());
             }
         }
+
+        logger.info("Processing: " + apk);
+        InstrumentUtil.setupSoot(androidPlatform, apk, outputDirectory);
 
         PackManager.v().getPack("jtp").add(new Transform("jtp.instrument", new BodyTransformer() {
             @Override
@@ -121,18 +122,13 @@ public class FrameworkMain {
             }
         }));
 
-        if (apk != null) {
-            logger.info("Processing: " + apk);
+        PackManager.v().runPacks();
 
-            InstrumentUtil.setupSoot(androidPlatform, apk, outputDirectory);
-            PackManager.v().runPacks();
-
-            try {
-                PackManager.v().writeOutput();
-            } catch (RuntimeException e) {
-                logger.error("Problem writing instrumented code to APK (" + apk + "): ");
-                e.printStackTrace();
-            }
+        try {
+            PackManager.v().writeOutput();
+        } catch (RuntimeException e) {
+            logger.error("Problem writing instrumented code to APK (" + apk + "): ");
+            e.printStackTrace();
         }
 
         logger.info("End time: " + timer.end());

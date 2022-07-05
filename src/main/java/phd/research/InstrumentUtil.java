@@ -37,7 +37,7 @@ public class InstrumentUtil {
         String classSignature = sootMethod.getDeclaringClass().getName();
         List<String> androidPrefixPkgNames =
                 Arrays.asList("java.", "javax.", "sun.", "com.sun.", "com.ibm.", "org.xml.", "org.w3c.", "apple.awt.",
-                        "com.apple.", "org.apache.", "org.eclipse.", "soot.", "android.", "com.google.android",
+                        "com.apple.", "org.apache.", "org.eclipse.", "soot.", "android.", "com.google.android.",
                         "androidx."
                              );
         return androidPrefixPkgNames.stream().anyMatch(classSignature::startsWith);
