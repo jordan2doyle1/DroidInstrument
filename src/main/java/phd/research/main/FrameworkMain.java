@@ -1,9 +1,11 @@
-package phd.research;
+package phd.research.main;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import phd.research.core.InstrumentUtil;
+import phd.research.Timer;
 import soot.*;
 import soot.jimple.JimpleBody;
 import soot.jimple.StringConstant;
@@ -18,6 +20,7 @@ import java.util.Map;
 /**
  * @author Jordan Doyle
  */
+
 public class FrameworkMain {
     private static final Logger logger = LoggerFactory.getLogger(FrameworkMain.class);
 
@@ -50,7 +53,7 @@ public class FrameworkMain {
             System.exit(0);
         }
 
-        Timer timer = new Timer();
+        phd.research.Timer timer = new Timer();
         logger.info("Start time: " + timer.start());
 
         String androidPlatform =

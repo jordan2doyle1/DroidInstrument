@@ -1,4 +1,4 @@
-package phd.research;
+package phd.research.core;
 
 import soot.*;
 import soot.javaToJimple.DefaultLocalGenerator;
@@ -8,6 +8,10 @@ import soot.options.Options;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+/**
+ * @author Jordan Doyle
+ */
 
 public class InstrumentUtil {
     public static final String C_TAG = "<COVERAGE_TEST>";
@@ -43,7 +47,7 @@ public class InstrumentUtil {
         return androidPrefixPkgNames.stream().anyMatch(classSignature::startsWith);
     }
 
-    public static Local generateNewLocal(Body body, Type type) {
+    private static Local generateNewLocal(Body body, Type type) {
         LocalGenerator lg = new DefaultLocalGenerator(body);
         return lg.generateLocal(type);
     }
