@@ -2,7 +2,6 @@ package phd.research.core;
 
 import org.junit.Before;
 import org.junit.Test;
-import phd.research.core.InstrumentUtil;
 import soot.*;
 import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
