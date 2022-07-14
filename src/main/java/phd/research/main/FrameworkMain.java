@@ -4,8 +4,8 @@ import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import phd.research.core.InstrumentUtil;
 import phd.research.Timer;
+import phd.research.core.InstrumentUtil;
 import soot.*;
 import soot.jimple.JimpleBody;
 import soot.jimple.StringConstant;
@@ -62,13 +62,15 @@ public class FrameworkMain {
             System.exit(20);
         }
 
-        File androidPlatform = new File((cmd.hasOption("p") ? cmd.getOptionValue("p") : System.getenv("ANDROID_HOME") + "/platforms/"));
+        File androidPlatform = new File(
+                (cmd.hasOption("p") ? cmd.getOptionValue("p") : System.getenv("ANDROID_HOME") + "/platforms/"));
         if (!androidPlatform.isDirectory()) {
             logger.error("Error: Android platform directory does not exist (" + androidPlatform + ").");
             System.exit(10);
         }
 
-        File outputDirectory = new File((cmd.hasOption("o") ? cmd.getOptionValue("o") : System.getProperty("user.dir") + "/output/"));
+        File outputDirectory =
+                new File((cmd.hasOption("o") ? cmd.getOptionValue("o") : System.getProperty("user.dir") + "/output/"));
         if (cmd.hasOption("o") && !outputDirectory.isDirectory()) {
             logger.warn("Output directory doesn't exist, using default directory instead.");
             outputDirectory = new File(System.getProperty("user.dir") + "/output/");

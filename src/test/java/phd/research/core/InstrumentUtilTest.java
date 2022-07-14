@@ -57,9 +57,15 @@ public class InstrumentUtilTest {
 
         assertEquals("Source object should be APK.", Options.src_prec_apk, Options.v().src_prec());
         assertEquals("Output format should be dex", Options.output_format_dex, Options.v().output_format());
-        assertEquals("Android jars not set properly.", this.androidPlatform.getAbsolutePath(), Options.v().android_jars());
-        assertEquals("APK's not set properly.", Collections.singletonList(this.apk.getAbsolutePath()), Options.v().process_dir());
-        assertEquals("Output directory not set properly.", this.outputDirectory.getAbsolutePath(), Options.v().output_dir());
+        assertEquals("Android jars not set properly.", this.androidPlatform.getAbsolutePath(),
+                Options.v().android_jars()
+                    );
+        assertEquals("APK's not set properly.", Collections.singletonList(this.apk.getAbsolutePath()),
+                Options.v().process_dir()
+                    );
+        assertEquals("Output directory not set properly.", this.outputDirectory.getAbsolutePath(),
+                Options.v().output_dir()
+                    );
     }
 
     @Test

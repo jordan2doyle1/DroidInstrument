@@ -1,7 +1,6 @@
 package phd.research.core;
 
 import org.junit.Test;
-import phd.research.core.InstrumentUtil;
 import soot.SootClass;
 import soot.SootMethod;
 
