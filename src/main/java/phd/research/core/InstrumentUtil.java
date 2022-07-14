@@ -5,6 +5,7 @@ import soot.javaToJimple.DefaultLocalGenerator;
 import soot.jimple.*;
 import soot.options.Options;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -17,20 +18,20 @@ public class InstrumentUtil {
     public static final String C_TAG = "<COVERAGE_TEST>";
     public static final String I_TAG = "<CALLBACK_ID>";
 
-    public static void setupSoot(String androidPlatform, String apk, String outputDirectory) {
+    public static void setupSoot(File androidPlatform, File apk, File outputDirectory) {
         G.reset();
         Options.v().set_allow_phantom_refs(true);
         Options.v().set_whole_program(true);
         Options.v().set_prepend_classpath(true);
         // Read (APK Dex-to-Jimple) Options
-        Options.v().set_android_jars(androidPlatform);
+        Options.v().set_android_jars(androidPlatform.getAbsolutePath());
         Options.v().set_src_prec(Options.src_prec_apk);
-        Options.v().set_process_dir(Collections.singletonList(apk));
+        Options.v().set_process_dir(Collections.singletonList(apk.getAbsolutePath()));
         Options.v().set_process_multiple_dex(true);
         Options.v().set_include_all(true);
         // Write (APK Generation) Options
         Options.v().set_output_format(Options.output_format_dex);
-        Options.v().set_output_dir(outputDirectory);
+        Options.v().set_output_dir(outputDirectory.getAbsolutePath());
         // Resolve required classes
         Scene.v().addBasicClass("java.io.PrintStream", SootClass.SIGNATURES);
         Scene.v().addBasicClass("java.lang.System", SootClass.SIGNATURES);

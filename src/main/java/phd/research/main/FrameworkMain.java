@@ -56,36 +56,33 @@ public class FrameworkMain {
         phd.research.Timer timer = new Timer();
         logger.info("Start time: " + timer.start());
 
-        String androidPlatform =
-                (cmd.hasOption("p") ? cmd.getOptionValue("p") : System.getenv("ANDROID_HOME") + "/platforms/");
-        if (!(new File(androidPlatform).isDirectory())) {
-            logger.error("Error: Android platform directory does not exist (" + androidPlatform + ").");
-            System.exit(10);
-        }
-
-        String apk = (cmd.hasOption("a") ? cmd.getOptionValue("a") : "");
-        if (!(new File(apk).exists())) {
+        File apk = new File((cmd.hasOption("a") ? cmd.getOptionValue("a") : ""));
+        if (!apk.exists()) {
             logger.error("Error: APK file does not exist (" + apk + ").");
             System.exit(20);
         }
 
-        String outputDirectory =
-                (cmd.hasOption("o") ? cmd.getOptionValue("o") : System.getProperty("user.dir") + "/output/");
-        if (!(new File(outputDirectory).isDirectory())) {
-            outputDirectory = System.getProperty("user.dir") + "/output/";
-            if (new File(outputDirectory).mkdir()) {
-                if (cmd.hasOption("o")) {
-                    logger.warn("Warning: Output directory doesn't exist, using default directory instead.");
-                }
-            } else {
-                logger.error("Error: Output directory does not exist.");
-                System.exit(40);
+        File androidPlatform = new File((cmd.hasOption("p") ? cmd.getOptionValue("p") : System.getenv("ANDROID_HOME") + "/platforms/"));
+        if (!androidPlatform.isDirectory()) {
+            logger.error("Error: Android platform directory does not exist (" + androidPlatform + ").");
+            System.exit(10);
+        }
+
+        File outputDirectory = new File((cmd.hasOption("o") ? cmd.getOptionValue("o") : System.getProperty("user.dir") + "/output/"));
+        if (cmd.hasOption("o") && !outputDirectory.isDirectory()) {
+            logger.warn("Output directory doesn't exist, using default directory instead.");
+            outputDirectory = new File(System.getProperty("user.dir") + "/output/");
+        }
+        if (!outputDirectory.isDirectory()) {
+            if (!outputDirectory.mkdir()) {
+                logger.error("Output directory does not exist.");
+                System.exit(10);
             }
         }
 
         if (cmd.hasOption("c")) {
             try {
-                FileUtils.cleanDirectory(new File(outputDirectory));
+                FileUtils.cleanDirectory(outputDirectory);
             } catch (IOException e) {
                 logger.error("Error cleaning output directory: " + e.getMessage());
             }

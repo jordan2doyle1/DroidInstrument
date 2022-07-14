@@ -9,6 +9,7 @@ import soot.jimple.StringConstant;
 import soot.options.Options;
 import soot.util.HashChain;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,17 +25,17 @@ import static org.mockito.Mockito.when;
 
 public class InstrumentUtilTest {
 
-    private String androidPlatform;
-    private String apk;
-    private String outputDirectory;
+    private File androidPlatform;
+    private File apk;
+    private File outputDirectory;
     private List<Unit> units;
     private JimpleBody body;
 
     @Before
     public void setUp() {
-        this.androidPlatform = System.getenv("ANDROID_HOME") + "/platforms/";
-        this.apk = System.getProperty("user.dir") + "/ActivityLifecycle.apk";
-        this.outputDirectory = System.getProperty("user.dir") + "/output/";
+        this.androidPlatform = new File(System.getenv("ANDROID_HOME") + "/platforms/");
+        this.apk = new File(System.getProperty("user.dir") + "/ActivityLifecycle.apk");
+        this.outputDirectory = new File(System.getProperty("user.dir") + "/output/");
 
         InstrumentUtil.setupSoot(this.androidPlatform, this.apk, this.outputDirectory);
 
@@ -56,9 +57,9 @@ public class InstrumentUtilTest {
 
         assertEquals("Source object should be APK.", Options.src_prec_apk, Options.v().src_prec());
         assertEquals("Output format should be dex", Options.output_format_dex, Options.v().output_format());
-        assertEquals("Android jars not set properly.", this.androidPlatform, Options.v().android_jars());
-        assertEquals("APK's not set properly.", Collections.singletonList(this.apk), Options.v().process_dir());
-        assertEquals("Output directory not set properly.", this.outputDirectory, Options.v().output_dir());
+        assertEquals("Android jars not set properly.", this.androidPlatform.getAbsolutePath(), Options.v().android_jars());
+        assertEquals("APK's not set properly.", Collections.singletonList(this.apk.getAbsolutePath()), Options.v().process_dir());
+        assertEquals("Output directory not set properly.", this.outputDirectory.getAbsolutePath(), Options.v().output_dir());
     }
 
     @Test
