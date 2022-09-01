@@ -78,6 +78,17 @@ public class InstrumentUtil {
         return idLocal;
     }
 
+    public static Local generateMenuIdStatements(JimpleBody body, List<Unit> generatedUnits) {
+        Local paramLocal = body.getParameterLocal(0);
+        SootMethod getIdMethod = Scene.v().grabMethod("<android.view.MenuItem: int getItemId()>");
+        InterfaceInvokeExpr idMethodCallExpr = Jimple.v().newInterfaceInvokeExpr(paramLocal, getIdMethod.makeRef());
+        Local idLocal = InstrumentUtil.generateNewLocal(body, IntType.v());
+        AssignStmt idAssignStmt = Jimple.v().newAssignStmt(idLocal, idMethodCallExpr);
+        generatedUnits.add(idAssignStmt);
+
+        return idLocal;
+    }
+
     public static Local appendTwoValues(Body body, Value value1, Value value2, List<Unit> generatedUnits) {
         RefType stringType = Scene.v().getSootClass("java.lang.String").getType();
         Local appendedString = generateNewLocal(body, stringType);

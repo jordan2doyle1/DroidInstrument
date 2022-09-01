@@ -94,6 +94,17 @@ public class InstrumentUtilTest {
     }
 
     @Test
+    public void testGenerateMenuIdStatements() {
+        when(this.body.getParameterLocal(0)).thenReturn(Jimple.v().newLocal("v", RefType.v("android.view.MenuItem")));
+        InstrumentUtil.generateMenuIdStatements(this.body, this.units);
+
+        assertEquals("Wrong number of generated units.", 1, this.units.size());
+        assertEquals("Value of unit is wrong.", "$i0 = interfaceinvoke v.<android.view.MenuItem: int getItemId()>()",
+                this.units.get(0).toString()
+                    );
+    }
+
+    @Test
     public void testAppendTwoValues() {
         InstrumentUtil.appendTwoValues(this.body, StringConstant.v("This is "), StringConstant.v("a test."),
                 this.units

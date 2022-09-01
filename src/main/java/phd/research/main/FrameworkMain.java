@@ -113,6 +113,14 @@ public class FrameworkMain {
                                     body.getMethod().getSignature()
                                          ));
                     printMessage = InstrumentUtil.appendTwoValues(body, stringValue, idLocal, generatedUnits);
+                } else if (body.getMethod().getParameterCount() >= 1 &&
+                        body.getMethod().getParameterType(0).equals(RefType.v("android.view.MenuItem"))) {
+                    Local idLocal = InstrumentUtil.generateMenuIdStatements(body, generatedUnits);
+                    Value stringValue = StringConstant.v(
+                            String.format("%s%s Method: %s View: ", InstrumentUtil.C_TAG, InstrumentUtil.I_TAG,
+                                    body.getMethod().getSignature()
+                                         ));
+                    printMessage = InstrumentUtil.appendTwoValues(body, stringValue, idLocal, generatedUnits);
                 } else {
                     printMessage = StringConstant.v(
                             String.format("%s Method: %s", InstrumentUtil.C_TAG, body.getMethod().getSignature()));
