@@ -44,7 +44,7 @@ public class FrameworkMain {
             final PrintWriter writer = new PrintWriter(System.out);
             formatter.printUsage(writer, 80, "DroidInstrument", options);
             writer.flush();
-            System.exit(0);
+            System.exit(1);
         }
 
         if (cmd.hasOption("h")) {
@@ -59,14 +59,14 @@ public class FrameworkMain {
         File apk = new File((cmd.hasOption("a") ? cmd.getOptionValue("a") : ""));
         if (!apk.exists()) {
             logger.error("Error: APK file does not exist (" + apk + ").");
-            System.exit(20);
+            System.exit(2);
         }
 
         File androidPlatform = new File(
                 (cmd.hasOption("p") ? cmd.getOptionValue("p") : System.getenv("ANDROID_HOME") + "/platforms/"));
         if (!androidPlatform.isDirectory()) {
             logger.error("Error: Android platform directory does not exist (" + androidPlatform + ").");
-            System.exit(10);
+            System.exit(3);
         }
 
         File outputDirectory =
@@ -78,7 +78,7 @@ public class FrameworkMain {
         if (!outputDirectory.isDirectory()) {
             if (!outputDirectory.mkdir()) {
                 logger.error("Output directory does not exist.");
-                System.exit(10);
+                System.exit(4);
             }
         }
 
@@ -137,8 +137,8 @@ public class FrameworkMain {
         try {
             PackManager.v().writeOutput();
         } catch (RuntimeException e) {
-            logger.error("Problem writing instrumented code to APK (" + apk + "): ");
-            e.printStackTrace();
+            logger.error("Problem writing instrumented code to APK (" + apk + "): " + e.getMessage(), e);
+            System.exit(5);
         }
 
         logger.info("End time: " + timer.end());
