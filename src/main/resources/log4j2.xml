@@ -49,6 +49,9 @@
                 <Pattern>[%level] (%F:%L) - %m%n</Pattern>
             </PatternLayout>
             <Filters>
+                <RegexFilter
+                        regex="Failed Typing in .+ at statement .+: Is not cast compatible: .+"
+                        onMatch="DENY" onMismatch="NEUTRAL"/>
                 <ThresholdFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
             </Filters>
 
