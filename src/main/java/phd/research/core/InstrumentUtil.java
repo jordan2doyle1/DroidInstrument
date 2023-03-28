@@ -15,6 +15,7 @@ import java.util.List;
  */
 
 public class InstrumentUtil {
+
     public static final String C_TAG = "<COVERAGE_TEST>";
     public static final String I_TAG = "<CALLBACK_ID>";
 
@@ -42,10 +43,19 @@ public class InstrumentUtil {
         String classSignature = sootMethod.getDeclaringClass().getName();
         List<String> androidPrefixPkgNames =
                 Arrays.asList("java.", "javax.", "sun.", "com.sun.", "com.ibm.", "org.xml.", "org.w3c.", "apple.awt.",
-                        "com.apple.", "org.apache.", "org.eclipse.", "soot.", "android.", "com.google.android.",
-                        "androidx."
+                        "com.apple.", "org.apache.", "org.eclipse.", "soot.", "android.", "com.google.", "androidx."
                              );
         return androidPrefixPkgNames.stream().anyMatch(classSignature::startsWith);
+    }
+
+    public static boolean isValidClass(SootMethod sootMethod) {
+        String className = sootMethod.getDeclaringClass().getShortName();
+        if (className.startsWith("R$")) {
+            return false;
+        }
+
+        String packageName = sootMethod.getDeclaringClass().getPackageName();
+        return !packageName.endsWith(".databinding");
     }
 
     private static Local generateNewLocal(Body body, Type type) {

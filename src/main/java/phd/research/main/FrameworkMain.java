@@ -96,9 +96,11 @@ public class FrameworkMain {
         PackManager.v().getPack("jtp").add(new Transform("jtp.instrument", new BodyTransformer() {
             @Override
             protected void internalTransform(Body b, String phaseName, Map<String, String> options) {
-                if (InstrumentUtil.isAndroidMethod(b.getMethod())) {
+                if (InstrumentUtil.isAndroidMethod(b.getMethod()) || !InstrumentUtil.isValidClass(b.getMethod())) {
                     return;
                 }
+
+                logger.debug("Instrumenting " + b.getMethod().getSignature());
 
                 JimpleBody body = (JimpleBody) b;
                 UnitPatchingChain units = b.getUnits();
