@@ -96,7 +96,8 @@ public class FrameworkMain {
         PackManager.v().getPack("jtp").add(new Transform("jtp.instrument", new BodyTransformer() {
             @Override
             protected void internalTransform(Body b, String phaseName, Map<String, String> options) {
-                if (InstrumentUtil.isAndroidMethod(b.getMethod()) || !InstrumentUtil.isValidClass(b.getMethod())) {
+                if (InstrumentUtil.isAndroidMethod(b.getMethod()) || !InstrumentUtil.isValidClass(b.getMethod()) ||
+                        !InstrumentUtil.isValidMethod(b.getMethod())) {
                     return;
                 }
 

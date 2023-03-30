@@ -50,12 +50,16 @@ public class InstrumentUtil {
 
     public static boolean isValidClass(SootMethod sootMethod) {
         String className = sootMethod.getDeclaringClass().getShortName();
-        if (className.startsWith("R$")) {
+        if (className.equals("R") || className.startsWith("R$") || className.equals("BuildConfig")) {
             return false;
         }
 
         String packageName = sootMethod.getDeclaringClass().getPackageName();
         return !packageName.endsWith(".databinding");
+    }
+
+    public static boolean isValidMethod(SootMethod method) {
+        return !method.getName().startsWith("access$");
     }
 
     private static Local generateNewLocal(Body body, Type type) {
