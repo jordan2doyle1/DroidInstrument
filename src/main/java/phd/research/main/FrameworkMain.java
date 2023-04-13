@@ -5,15 +5,16 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import phd.research.Timer;
-import phd.research.core.InstrumentUtil;
+import phd.research.utility.Filter;
+import phd.research.jimple.JimpleGenerator;
+import phd.research.singleton.InstrumentSettings;
+import phd.research.singleton.SootAnalysis;
 import soot.*;
 import soot.jimple.JimpleBody;
-import soot.jimple.StringConstant;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +23,7 @@ import java.util.Map;
  */
 
 public class FrameworkMain {
-    private static final Logger logger = LoggerFactory.getLogger(FrameworkMain.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FrameworkMain.class);
 
     public static void main(String[] args) {
         Options options = new Options();
@@ -53,85 +54,69 @@ public class FrameworkMain {
             System.exit(0);
         }
 
-        phd.research.Timer timer = new Timer();
-        logger.info("Start time: " + timer.start());
+        Timer timer = new Timer();
+        LOGGER.info("Start time: " + timer.start());
 
-        File apk = new File((cmd.hasOption("a") ? cmd.getOptionValue("a") : ""));
-        if (!apk.exists()) {
-            logger.error("Error: APK file does not exist (" + apk + ").");
+        InstrumentSettings settings = InstrumentSettings.v();
+        try {
+            settings.setApkFile(new File(cmd.getOptionValue("a")));
+        } catch (IOException e) {
+            LOGGER.error("Files missing: " + e.getMessage());
             System.exit(20);
         }
 
-        File androidPlatform = new File(
-                (cmd.hasOption("p") ? cmd.getOptionValue("p") : System.getenv("ANDROID_HOME") + "/platforms/"));
-        if (!androidPlatform.isDirectory()) {
-            logger.error("Error: Android platform directory does not exist (" + androidPlatform + ").");
-            System.exit(30);
+        if (cmd.hasOption("p")) {
+            try {
+                settings.setPlatformDirectory(new File(cmd.getOptionValue("p")));
+            } catch (IOException e) {
+                LOGGER.error("Files missing: " + e.getMessage());
+                System.exit(30);
+            }
         }
 
-        File outputDirectory =
-                new File((cmd.hasOption("o") ? cmd.getOptionValue("o") : System.getProperty("user.dir") + "/output/"));
-        if (cmd.hasOption("o") && !outputDirectory.isDirectory()) {
-            logger.warn("Output directory doesn't exist, using default directory instead.");
-            outputDirectory = new File(System.getProperty("user.dir") + "/output/");
-        }
-        if (!outputDirectory.isDirectory()) {
-            if (!outputDirectory.mkdir()) {
-                logger.error("Output directory does not exist.");
+        if (cmd.hasOption("o")) {
+            try {
+                settings.setOutputDirectory(new File(cmd.getOptionValue("o")));
+            } catch (IOException e) {
+                LOGGER.error("Files missing: " + e.getMessage());
                 System.exit(40);
             }
         }
 
+        try {
+            settings.validate();
+        } catch (IOException e) {
+            LOGGER.error("Files missing: " + e.getMessage());
+            System.exit(50);
+        }
+
         if (cmd.hasOption("c")) {
             try {
-                FileUtils.cleanDirectory(outputDirectory);
+                FileUtils.cleanDirectory(settings.getOutputDirectory());
             } catch (IOException e) {
-                logger.error("Error cleaning output directory: " + e.getMessage());
+                LOGGER.error("Failed to clean output directory." + e.getMessage());
             }
         }
 
-        logger.info("Processing: " + apk);
-        InstrumentUtil.setupSoot(androidPlatform, apk, outputDirectory);
+        LOGGER.info("Processing: " + InstrumentSettings.v().getApkFile());
+        if (!SootAnalysis.v().isSootInitialised()) {
+            SootAnalysis.v().initialiseSoot();
+        }
 
         PackManager.v().getPack("jtp").add(new Transform("jtp.instrument", new BodyTransformer() {
             @Override
             protected void internalTransform(Body b, String phaseName, Map<String, String> options) {
-                if (InstrumentUtil.isAndroidMethod(b.getMethod()) || !InstrumentUtil.isValidClass(b.getMethod()) ||
-                        !InstrumentUtil.isValidMethod(b.getMethod())) {
+                JimpleBody body = (JimpleBody) b;
+                if (!Filter.isValidMethod(body.getMethod())) {
                     return;
                 }
 
-                logger.debug("Instrumenting " + b.getMethod().getSignature());
-
-                JimpleBody body = (JimpleBody) b;
-                UnitPatchingChain units = b.getUnits();
-                List<Unit> generatedUnits = new ArrayList<>();
-
-                Value printMessage;
-                if (body.getMethod().getParameterCount() >= 1 &&
-                        body.getMethod().getParameterType(0).equals(RefType.v("android.view.View"))) {
-                    Local idLocal = InstrumentUtil.generateGetIdStatements(body, generatedUnits);
-                    Value stringValue = StringConstant.v(
-                            String.format("%s%s Method: %s View: ", InstrumentUtil.C_TAG, InstrumentUtil.I_TAG,
-                                    body.getMethod().getSignature()
-                                         ));
-                    printMessage = InstrumentUtil.appendTwoValues(body, stringValue, idLocal, generatedUnits);
-                } else if (body.getMethod().getParameterCount() >= 1 &&
-                        body.getMethod().getParameterType(0).equals(RefType.v("android.view.MenuItem"))) {
-                    Local idLocal = InstrumentUtil.generateMenuIdStatements(body, generatedUnits);
-                    Value stringValue = StringConstant.v(
-                            String.format("%s%s Method: %s View: ", InstrumentUtil.C_TAG, InstrumentUtil.I_TAG,
-                                    body.getMethod().getSignature()
-                                         ));
-                    printMessage = InstrumentUtil.appendTwoValues(body, stringValue, idLocal, generatedUnits);
-                } else {
-                    printMessage = StringConstant.v(
-                            String.format("%s Method: %s", InstrumentUtil.C_TAG, body.getMethod().getSignature()));
-                }
-
-                InstrumentUtil.generatePrintStatements(body, printMessage, generatedUnits);
-                units.insertBefore(generatedUnits, body.getFirstNonIdentityStmt());
-                b.validate();
+                LOGGER.debug("Instrumenting " + body.getMethod().getSignature());
+                JimpleGenerator jimpleGenerator = new JimpleGenerator(body);
+                jimpleGenerator.generateInstrumentUnits();
+                List<Unit> units = jimpleGenerator.getUnits();
+                body.getUnits().insertBefore(units, body.getFirstNonIdentityStmt());
+                body.validate();
             }
         }));
 
@@ -140,11 +125,12 @@ public class FrameworkMain {
         try {
             PackManager.v().writeOutput();
         } catch (RuntimeException e) {
-            logger.error("Problem writing instrumented code to APK (" + apk + "): " + e.getMessage(), e);
-            System.exit(50);
+            LOGGER.error("Problem writing instrumented code to APK (" + InstrumentSettings.v().getApkFile() + "): " +
+                    e.getMessage(), e);
+            System.exit(60);
         }
 
-        logger.info("End time: " + timer.end());
-        logger.info("Execution time: " + timer.secondsDuration() + " second(s).");
+        LOGGER.info("End time: " + timer.end());
+        LOGGER.info("Execution time: " + timer.secondsDuration() + " second(s).");
     }
 }
