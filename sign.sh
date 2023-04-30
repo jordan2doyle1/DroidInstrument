@@ -9,6 +9,12 @@
 
 script=$(echo "$0" | rev | cut -d "/" -f1 | rev)
 
+function exit_cleanup {
+	[[ -f "$temp_file" ]] && rm "$temp_file"
+	temp_file_idsig="temp_file.apk.idsig"
+    [[ -f "$temp_file_idsig" ]] && rm "$temp_file_idsig"
+}
+
 if [ $# -ne 2 ]; then
     echo "[ERROR] ($script) - Required arguments not provided."
     exit 2
@@ -46,12 +52,6 @@ fi
 key="$2"
 
 temp_file="temp_file.apk"
-
-function exit_cleanup {
-	[[ -f "$temp_file" ]] && rm "$temp_file"
-	temp_file_idsig="temp_file.apk.idsig"
-    [[ -f "$temp_file_idsig" ]] && rm "$temp_file_idsig"
-}
 
 trap exit_cleanup EXIT
 

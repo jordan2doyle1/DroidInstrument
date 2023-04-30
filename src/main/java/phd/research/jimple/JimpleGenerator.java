@@ -13,8 +13,8 @@ import java.util.List;
 
 public class JimpleGenerator {
 
-    public static final String C_TAG = "<COVERAGE_TEST>";
-    public static final String I_TAG = "<CALLBACK_ID>";
+    public static final String M_TAG = "<METHOD>";
+    public static final String C_TAG = "<CONTROL>";
 
     private final JimpleBody body;
     private final List<Unit> units;
@@ -29,7 +29,7 @@ public class JimpleGenerator {
     }
 
     public void generateInstrumentUnits() {
-        String instrumentMessage = C_TAG + I_TAG + " Method: " + this.body.getMethod().getSignature() + " View: ";
+        String instrumentMessage = C_TAG + " Method: " + this.body.getMethod().getSignature() + " View: ";
         Value stringValue = StringConstant.v(instrumentMessage);
 
         Value printMessage;
@@ -42,7 +42,7 @@ public class JimpleGenerator {
             Local idLocal = this.generateGetItemId();
             printMessage = this.generateAppend(stringValue, idLocal);
         } else {
-            printMessage = StringConstant.v(JimpleGenerator.C_TAG + " Method: " + this.body.getMethod().getSignature());
+            printMessage = StringConstant.v(JimpleGenerator.M_TAG + " Method: " + this.body.getMethod().getSignature());
         }
 
         this.generatePrint(printMessage);
