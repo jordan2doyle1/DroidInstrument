@@ -34,12 +34,6 @@ public class InstrumentSettings {
         return instance;
     }
 
-    @SuppressWarnings("unused")     // Unit testing purposes.
-    public static void resetDefaults() {
-        instance = null;
-        LOGGER.info("Settings have been reset to default.");
-    }
-
     public void validate() throws IOException {
         this.loggerActive = false;
         setPlatformDirectory(this.androidPlatformDirectory);
