@@ -3,7 +3,7 @@
 # Author: Jordan Doyle
 #
 # Required Parameters:
-#   - Input APK File : The apk file on which to run DroidGraph2.0.
+#   - Input APK File : The apk file on which to run Droid Instrument.
 #   - Key Store File : The key store file used to sign the apk file. 
 # 
 
@@ -25,28 +25,28 @@ if [[ ! -d "$ANDROID_HOME" ]]; then
 	exit 3
 fi
 
-tool_versions=($ANDROID_HOME/build-tools/*/)
-build_tools=$(printf "%s\n" ${tool_versions[*]} | sort -nr | head -n1)
+tool_versions=("$ANDROID_HOME"/build-tools/*/)
+build_tools=$(printf "%s\n" "${tool_versions[*]}" | sort -nr | head -n1)
 if [[ ! -d "$build_tools" ]]; then
-	echo "[ERROR] ($script) - Android build tools directory ("$build_tools") does not exist."
+	echo "[ERROR] ($script) - Android build tools directory ($build_tools) does not exist."
 	exit 4
 fi
 
 zip_align="$build_tools/zipalign"
 apk_signer="$build_tools/apksigner"
 if [[ ! -f "$zip_align" ]] || [[ ! -f "$apk_signer" ]]; then 
-	echo "[ERROR] ($script) - zipalign ("$zip_align") or apksigner ("$apk_signer") cannot be found."
+	echo "[ERROR] ($script) - zipalign ($zip_align) or apksigner ($apk_signer) cannot be found."
 	exit 5
 fi
 
 if [[ ! -f "$1" ]] || [[ "$1" != *.apk ]]; then
-	echo "[ERROR] ($script) - Input file ("$1") does not exist."
+	echo "[ERROR] ($script) - Input file ($1) does not exist."
 	exit 6
 fi
 apk_file="$1"
 
 if [[ ! -f "$2" ]]; then
-	echo "[ERROR] ($script) - Input key store file ("$2") does not exist."
+	echo "[ERROR] ($script) - Input key store file ($2) does not exist."
 	exit 7
 fi
 key="$2"

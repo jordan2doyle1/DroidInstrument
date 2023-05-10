@@ -97,8 +97,8 @@ public class JimpleGenerator {
         this.units.add(initBuilderStmt);
 
         SootMethodRef appendRef = builderClass.getMethod("java.lang.StringBuilder append(java.lang.String)").makeRef();
-        VirtualInvokeExpr appendExpr = Jimple.v().newVirtualInvokeExpr(builderLocal, appendRef,
-                generateToString(value2));
+        VirtualInvokeExpr appendExpr =
+                Jimple.v().newVirtualInvokeExpr(builderLocal, appendRef, generateToString(value2));
         Local tmpLocal = generateNewLocal(builderType);
         AssignStmt builderAppendStmt = Jimple.v().newAssignStmt(tmpLocal, appendExpr);
         this.units.add(builderAppendStmt);

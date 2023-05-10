@@ -5,10 +5,10 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import phd.research.Timer;
-import phd.research.utility.Filter;
 import phd.research.jimple.JimpleGenerator;
 import phd.research.singleton.InstrumentSettings;
 import phd.research.singleton.SootAnalysis;
+import phd.research.utility.Filter;
 import soot.*;
 import soot.jimple.JimpleBody;
 
@@ -22,8 +22,8 @@ import java.util.Map;
  * @author Jordan Doyle
  */
 
-public class FrameworkMain {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FrameworkMain.class);
+public class Main {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
         Options options = new Options();
