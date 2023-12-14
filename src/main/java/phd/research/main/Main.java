@@ -4,11 +4,11 @@ import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import phd.research.Timer;
 import phd.research.jimple.JimpleGenerator;
 import phd.research.singleton.InstrumentSettings;
 import phd.research.singleton.SootAnalysis;
 import phd.research.utility.Filter;
+import phd.research.utility.Timer;
 import soot.*;
 import soot.jimple.JimpleBody;
 
