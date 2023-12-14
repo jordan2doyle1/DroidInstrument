@@ -96,12 +96,16 @@ public class JimpleGenerator {
         SootClass fragment = this.body.getMethod().getDeclaringClass();
         if (fragment.hasSuperclass()) {
             superClass = fragment.getSuperclass();
-            for (SootMethod method : superClass.getMethods()) {
-                if (method.getName().equals("getActivity")) {
-                    getActivityMethod = method;
-                    break;
+            outer:
+                while (superClass.hasSuperclass()) {
+                    for (SootMethod method : superClass.getMethods()) {
+                        if (method.getName().equals("getActivity")) {
+                            getActivityMethod = method;
+                            break outer;
+                        }
+                    }
+                    superClass = superClass.getSuperclass();
                 }
-            }
         } else {
             LOGGER.warn("Fragment class '" + fragment.getName() + "' does not have superclass.");
         }
