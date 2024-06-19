@@ -54,7 +54,7 @@ public class InstrumentSettings {
         this.apkFile = apkFile;
 
         if (this.loggerActive) {
-            LOGGER.info("Apk file set as '" + apkFile.getAbsolutePath() + "'.");
+            LOGGER.info("Apk file set as '{}'.", apkFile.getAbsolutePath());
         }
     }
 
@@ -70,7 +70,7 @@ public class InstrumentSettings {
         this.androidPlatformDirectory = androidPlatformDirectory;
 
         if (this.loggerActive) {
-            LOGGER.info("Android platform directory set as '" + androidPlatformDirectory.getAbsolutePath() + "'");
+            LOGGER.info("Android platform directory set as '{}'", androidPlatformDirectory.getAbsolutePath());
         }
     }
 
@@ -86,7 +86,7 @@ public class InstrumentSettings {
         this.outputDirectory = outputDirectory;
 
         if (this.loggerActive) {
-            LOGGER.info("Output directory set as '" + outputDirectory.getAbsolutePath() + ".");
+            LOGGER.info("Output directory set as '{}.", outputDirectory.getAbsolutePath());
         }
     }
 }

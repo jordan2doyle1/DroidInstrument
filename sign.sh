@@ -1,10 +1,6 @@
 #!/bin/bash
 #
 # Author: Jordan Doyle
-#
-# Required Parameters:
-#   - Input APK File : The apk file on which to run Droid Instrument.
-#   - Key Store File : The key store file used to sign the apk file. 
 # 
 
 script=$(echo "$0" | rev | cut -d "/" -f1 | rev)

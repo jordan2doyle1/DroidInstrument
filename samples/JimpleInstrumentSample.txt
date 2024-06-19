@@ -1,4 +1,4 @@
-This is the entire onClick() method with the code that we want:
+This is a sample Android onClick() method with the instrumentation code added:
 
 r0 := @this: com.example.android.lifecycle.ActivityA$1
 $r1 := @parameter0: android.view.View
@@ -18,13 +18,13 @@ virtualinvoke $r5.<com.example.android.lifecycle.ActivityA: void startActivityB(
 return
 
 
-This is what I need to add when there is no view:
+These are the instrumentation statements that are added when there is no view:
 
 $r1 = <java.lang.System: java.io.PrintStream out>
 virtualinvoke $r1.<java.io.PrintStream: void println(java.lang.String)>("<COVERAGE_TEST> Method: onClick()")
 
 
-This is what I need to add when there is a view:
+These are the instrumentation statements that are added when there is a view:
 
 $r1 := @parameter0: android.view.View
 $i0 = virtualinvoke $r1.<android.view.View: int getId()>()
@@ -38,7 +38,7 @@ $r4 = virtualinvoke $r3.<java.lang.StringBuilder: java.lang.String toString()>()
 virtualinvoke $r2.<java.io.PrintStream: void println(java.lang.String)>($r4)
 
 
-This is what I need to add in the onCreate method of each Activity.
+These are the instrumentation statements that are added to the onCreate method of each Activity:
 
 r3 = <java.lang.System: java.io.PrintStream out>
 r4 = new java.lang.StringBuilder
@@ -51,7 +51,7 @@ $r6 = virtualinvoke r4.<java.lang.StringBuilder: java.lang.String toString()>()
 virtualinvoke r3.<java.io.PrintStream: void println(java.lang.String)>($r6)
 
 
-This is what I need to add in the onCreateView method of each Fragment.
+These are the instrumentation statements that are added to the onCreateView method of each Fragment:
 
 $r0 = virtualinvoke r0.<java.lang.Object: java.lang.Class getClass()>()
 $r4 = virtualinvoke $r0.<java.lang.Class: java.lang.String getName()>()

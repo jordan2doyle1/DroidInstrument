@@ -107,11 +107,11 @@ public class JimpleGenerator {
                     superClass = superClass.getSuperclass();
                 }
         } else {
-            LOGGER.warn("Fragment class '" + fragment.getName() + "' does not have superclass.");
+            LOGGER.warn("Fragment class '{}' does not have superclass.", fragment.getName());
         }
 
         if (getActivityMethod == null) {
-            LOGGER.warn("No 'getActivity' method found for fragment '" + fragment.getName() + ".");
+            LOGGER.warn("No 'getActivity' method found for fragment '{}.", fragment.getName());
         }
 
         if (superClass != null && getActivityMethod != null) {

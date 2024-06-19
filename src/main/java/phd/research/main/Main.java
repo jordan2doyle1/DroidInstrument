@@ -55,13 +55,13 @@ public class Main {
         }
 
         Timer timer = new Timer();
-        LOGGER.info("Start time: " + timer.start());
+        LOGGER.info("Start time: {}", timer.start());
 
         InstrumentSettings settings = InstrumentSettings.v();
         try {
             settings.setApkFile(new File(cmd.getOptionValue("a")));
         } catch (IOException e) {
-            LOGGER.error("Files missing: " + e.getMessage());
+            LOGGER.error("APK file missing: {}", e.getMessage());
             System.exit(20);
         }
 
@@ -69,7 +69,7 @@ public class Main {
             try {
                 settings.setPlatformDirectory(new File(cmd.getOptionValue("p")));
             } catch (IOException e) {
-                LOGGER.error("Files missing: " + e.getMessage());
+                LOGGER.error("Platform files missing: {}", e.getMessage());
                 System.exit(30);
             }
         }
@@ -78,7 +78,7 @@ public class Main {
             try {
                 settings.setOutputDirectory(new File(cmd.getOptionValue("o")));
             } catch (IOException e) {
-                LOGGER.error("Files missing: " + e.getMessage());
+                LOGGER.error("Output directory missing: {}", e.getMessage());
                 System.exit(40);
             }
         }
@@ -86,7 +86,7 @@ public class Main {
         try {
             settings.validate();
         } catch (IOException e) {
-            LOGGER.error("Files missing: " + e.getMessage());
+            LOGGER.error("Files missing: {}", e.getMessage());
             System.exit(50);
         }
 
@@ -94,11 +94,11 @@ public class Main {
             try {
                 FileUtils.cleanDirectory(settings.getOutputDirectory());
             } catch (IOException e) {
-                LOGGER.error("Failed to clean output directory." + e.getMessage());
+                LOGGER.error("Failed to clean output directory.{}", e.getMessage());
             }
         }
 
-        LOGGER.info("Processing: " + InstrumentSettings.v().getApkFile());
+        LOGGER.info("Processing: {}", InstrumentSettings.v().getApkFile());
         if (!SootAnalysis.v().isSootInitialised()) {
             SootAnalysis.v().initialiseSoot();
         }
@@ -111,7 +111,7 @@ public class Main {
                     return;
                 }
 
-                LOGGER.debug("Instrumenting " + body.getMethod().getSignature());
+                LOGGER.debug("Instrumenting {}", body.getMethod().getSignature());
                 JimpleGenerator jimpleGenerator = new JimpleGenerator(body);
                 jimpleGenerator.generateInstrumentUnits();
                 List<Unit> units = jimpleGenerator.getUnits();
@@ -125,12 +125,12 @@ public class Main {
         try {
             PackManager.v().writeOutput();
         } catch (RuntimeException e) {
-            LOGGER.error("Problem writing instrumented code to APK (" + InstrumentSettings.v().getApkFile() + "): " +
+            LOGGER.error("Problem writing instrumented code to APK ({}): {}", InstrumentSettings.v().getApkFile(),
                     e.getMessage(), e);
             System.exit(60);
         }
 
-        LOGGER.info("End time: " + timer.end());
-        LOGGER.info("Execution time: " + timer.secondsDuration() + " second(s).");
+        LOGGER.info("End time: {}", timer.end());
+        LOGGER.info("Execution time: {} second(s).", timer.secondsDuration());
     }
 }
