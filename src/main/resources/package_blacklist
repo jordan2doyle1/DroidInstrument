@@ -5,6 +5,7 @@ com.sun.
 com.ibm.
 org.xml.
 org.w3c.
+.databinding
 apple.awt.
 com.apple.
 org.apache.
@@ -13,5 +14,3 @@ soot.
 com.google.
 android.
 androidx.
-.databinding
-com.mikepenz.
