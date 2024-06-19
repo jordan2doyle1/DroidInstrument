@@ -20,8 +20,8 @@ cd DroidInstrument
 mvn package
 ```
 
-The maven package command will build a Jar file with dependencies included. Run the project using the jar file and 
-the sample APK file using the following commands: 
+The maven package command will build a JAR file with dependencies included. Run the project using the JAR file and 
+the sample APK file with the following commands: 
 
 ```
 cd target
